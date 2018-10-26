@@ -1,7 +1,5 @@
 from googleapiclient.discovery import build
 from google.oauth2 import service_account
-from oauth2client import file, client, tools
-from pathlib import Path
 from operator import itemgetter
 import tmdbsimple as tmdb
 
@@ -31,14 +29,15 @@ def main():
         for row in values:
             request = tmdb_search.movie(query=row[0])
             result = tmdb_search.results[0]
-            lijst = itemgetter('title', 'id', 'vote_average', 'poster_path', 'overview', 'genre_ids')(result)
+            #lijst = itemgetter('title', 'id', 'vote_average', 'poster_path', 'overview', 'genre_ids')(result)
             #print(lijst)
             movie_title = result.get('title')
             movie_id = result.get('id')
+            new_values = [[movie_title, movie_id]]
+            body = {'values': new_values}
             value_input_option = 'RAW'
-            value_body = [movie_title, movie_id]
-            push = service.spreadsheets().values().batchUpdate(spreadsheetId=spreadsheet,body=lijst)
-            update_sheet = push.execute()
+            push = service.spreadsheets().values().update(spreadsheetId=spreadsheet,range=range,valueInputOption=value_input_option,body=body).execute()
+            print('{0} cells updated.'.format(result.get('updatedCells')));
 
 if __name__ == '__main__':
     main()

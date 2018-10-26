@@ -5,10 +5,8 @@ name = "pypi"
 
 [packages]
 google-api-python-client = "*"
-oauth2client = "*"
 httplib2 = "*"
 tmdbsimple = "*"
-pathlib = "*"
 
 [dev-packages]
 
