@@ -15,7 +15,7 @@ def main():
     service = build('sheets', 'V4', credentials=creds)
 
     spreadsheet = '1ege7bvaIgUs7Y4OETbtdiQ_ISgwtGzH9zlZeBKYPXY8'
-    range = 'A'
+    range = 'A2:F'
     result = service.spreadsheets().values().get(spreadsheetId=spreadsheet, range=range).execute()
     values = result.get('values', [])
 
