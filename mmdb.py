@@ -10,22 +10,20 @@ tmdb_api_key = '../../Secrets/tmdb_secret'
 
 
 def connect_sheets_api(api_scope, api_sa_file):
-
     creds = service_account.Credentials.from_service_account_file(api_sa_file, scopes=api_scope)
     gsheets = build('sheets', 'V4', credentials=creds)
     return gsheets
 
 
 def connect_tmdb(tmdb_key):
-
     with open(tmdb_key) as f:
-        tmdb_connect = [line.strip() for line in list(f)]
-        print(tmdb_connect)
-    return tmdb_connect
+        api_key = [line.strip() for line in list(f)]
+    tmdb.API_KEY = api_key
+    tmdb_search = tmdb.Search()
+    return tmdb_search
 
 
 def get_movies(sheet_connect, spreadsheet):
-
     gsheet_range = 'A:F'
     gsheet_data = sheet_connect.spreadsheets().values().get(spreadsheetId=spreadsheet, range=gsheet_range).execute()
     gsheet_values = gsheet_data.get('values', [])
@@ -33,11 +31,10 @@ def get_movies(sheet_connect, spreadsheet):
 
 
 def main():
-
     sheet_connect = connect_sheets_api(scope, sa_file)
     movies = get_movies(sheet_connect, spreadsheetID)
 
-    tmdb_search = tmdb.Search()
+    tmdb_search = connect_tmdb(tmdb_api_key)
 
     if not movies:
         print('No data found')
