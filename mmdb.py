@@ -4,30 +4,46 @@ import tmdbsimple as tmdb
 
 scope = ['https://www.googleapis.com/auth/drive.file', 'https://www.googleapis.com/auth/spreadsheets']
 sa_file = '../../Secrets/mmdb_secret.json'
+spreadsheetID = '1ege7bvaIgUs7Y4OETbtdiQ_ISgwtGzH9zlZeBKYPXY8'
+
+tmdb_api_key = '../../Secrets/tmdb_secret'
+
+
+def connect_sheets_api(api_scope, api_sa_file):
+
+    creds = service_account.Credentials.from_service_account_file(api_sa_file, scopes=api_scope)
+    gsheets = build('sheets', 'V4', credentials=creds)
+    return gsheets
+
+
+def connect_tmdb(tmdb_key):
+
+    with open(tmdb_key) as f:
+        tmdb_connect = [line.strip() for line in list(f)]
+        print(tmdb_connect)
+    return tmdb_connect
+
+
+def get_movies(sheet_connect, spreadsheet):
+
+    gsheet_range = 'A:F'
+    gsheet_data = sheet_connect.spreadsheets().values().get(spreadsheetId=spreadsheet, range=gsheet_range).execute()
+    gsheet_values = gsheet_data.get('values', [])
+    return gsheet_values
 
 
 def main():
-    creds = service_account.Credentials.from_service_account_file(sa_file, scopes=scope)
 
-    with open('../../Secrets/tmdb_secret') as f:
-        tmdb_api_key = [line.strip() for line in list(f)]
-
-    service = build('sheets', 'V4', credentials=creds)
-
-    spreadsheet = '1ege7bvaIgUs7Y4OETbtdiQ_ISgwtGzH9zlZeBKYPXY8'
-    range = 'A2:F'
-    result = service.spreadsheets().values().get(spreadsheetId=spreadsheet, range=range).execute()
-    values = result.get('values', [])
-
-    tmdb.API_KEY = tmdb_api_key
+    sheet_connect = connect_sheets_api(scope, sa_file)
+    movies = get_movies(sheet_connect, spreadsheetID)
 
     tmdb_search = tmdb.Search()
 
-    if not values:
+    if not movies:
         print('No data found')
     else:
-        for row in values:
-            tmdb_search.movie(query=row[0])
+        for movie in movies:
+            tmdb_search.movie(query=movie[0])
             result = tmdb_search.results[0]
             # lijst = itemgetter('title', 'id', 'vote_average', 'poster_path', 'overview', 'genre_ids')(result)
             print(result)
