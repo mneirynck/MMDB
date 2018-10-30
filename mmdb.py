@@ -30,6 +30,18 @@ def get_movies(sheet_connect, spreadsheet):
     return gsheet_values
 
 
+def get_genres(genre_ids,tmdb_key):
+    with open(tmdb_key) as f:
+        api_key = [line.strip() for line in list(f)]
+    tmdb.API_KEY = api_key
+    tmdb_genres = tmdb.Genres().movie_list()
+    print(tmdb_genres)
+    for genre_id in genre_ids:
+        for genre in tmdb_genres:
+            if genre.get('id') == genre_id:
+                print(genre.get('name'))
+
+
 def main():
     sheet_connect = connect_sheets_api(scope, sa_file)
     movies = get_movies(sheet_connect, spreadsheetID)
@@ -44,12 +56,14 @@ def main():
             result = tmdb_search.results[0]
             # lijst = itemgetter('title', 'id', 'vote_average', 'poster_path', 'overview', 'genre_ids')(result)
             print(result)
+
             movie_title = result.get('title')
             movie_id = result.get('id')
             movie_score = result.get('vote_average')
             movie_image = 'https://image.tmdb.org/t/p/original' + result.get('poster_path')
             movie_description = result.get('overview')
             movie_genres = result.get('genre_ids')
+            genres = get_genres(movie_genres, tmdb_api_key)
             # for genre_id in movie_genres:
             #     genre_request = tmdb.Genres(genre_id)
             #     movie_genre = genre_request.info()
@@ -58,8 +72,8 @@ def main():
             # print(new_values)
             body = {'values': new_values}
             value_input_option = 'RAW'
-            service.spreadsheets().values().update(spreadsheetId=spreadsheet, range=range,
-                                                   valueInputOption=value_input_option, body=body).execute()
+            #service.spreadsheets().values().update(spreadsheetId=spreadsheet, range=range,
+            #                                       valueInputOption=value_input_option, body=body).execute()
 
 
 if __name__ == '__main__':
