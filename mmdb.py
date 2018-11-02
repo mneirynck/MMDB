@@ -30,16 +30,25 @@ def get_movies(sheet_connect, spreadsheet):
     return gsheet_values
 
 
+def update_sheet(sheet_connect, spreadsheet, values, row):
+    gsheet_range = 'A:F'
+    body = {'values': values}
+    value_input_option = 'RAW'
+    sheet_connect.spreadsheets().values().append(spreadsheetId=spreadsheet, range=gsheet_range, valueInputOption=value_input_option, body=body).execute()
+
+
 def get_genres(genre_ids,tmdb_key):
+    genres = []
     with open(tmdb_key) as f:
         api_key = [line.strip() for line in list(f)]
     tmdb.API_KEY = api_key
     tmdb_genres = tmdb.Genres().movie_list()
-    print(tmdb_genres)
+    data = tmdb_genres['genres']
     for genre_id in genre_ids:
-        for genre in tmdb_genres:
-            if genre.get('id') == genre_id:
-                print(genre.get('name'))
+        for i in data:
+            if genre_id == i['id']:
+                genres.append(i['name'])
+    return genres
 
 
 def main():
@@ -47,6 +56,7 @@ def main():
     movies = get_movies(sheet_connect, spreadsheetID)
 
     tmdb_search = connect_tmdb(tmdb_api_key)
+    row = 0
 
     if not movies:
         print('No data found')
@@ -54,8 +64,6 @@ def main():
         for movie in movies:
             tmdb_search.movie(query=movie[0])
             result = tmdb_search.results[0]
-            # lijst = itemgetter('title', 'id', 'vote_average', 'poster_path', 'overview', 'genre_ids')(result)
-            print(result)
 
             movie_title = result.get('title')
             movie_id = result.get('id')
@@ -64,16 +72,12 @@ def main():
             movie_description = result.get('overview')
             movie_genres = result.get('genre_ids')
             genres = get_genres(movie_genres, tmdb_api_key)
-            # for genre_id in movie_genres:
-            #     genre_request = tmdb.Genres(genre_id)
-            #     movie_genre = genre_request.info()
-            #     print(movie_genre)
-            new_values = [[movie_id, movie_score, movie_image, movie_description]]
-            # print(new_values)
-            body = {'values': new_values}
-            value_input_option = 'RAW'
-            #service.spreadsheets().values().update(spreadsheetId=spreadsheet, range=range,
-            #                                       valueInputOption=value_input_option, body=body).execute()
+
+            new_values = [[movie_title, movie_id, movie_score, movie_image, movie_description]]
+            update_sheet(sheet_connect, spreadsheetID, new_values, row)
+            row += 1
+
+
 
 
 if __name__ == '__main__':
